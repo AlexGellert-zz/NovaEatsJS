@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+
+<head>
+    <title>Nova Eats</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimal-ui">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?key=<Bing_API_Key>' async defer></script>
+    <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
+    <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
+</head>
+
+<body onload='loadMapScenario();'>
+
+    <div class="container-fluid">
+        <span></span>
+        <div id="header">
+            <div id="blankSpace">
+                </br>
+                </br>
+                </br>
+                </br>
+            </div>
+            <h1>Nova Eats</h1>
+        </div>
+        <div id="header2">
+            <h1>Nova Eats</h1>
+        </div>
+        <div class="searching">
+            <input class="form-control" id="search" type="text" placeholder="Search A City or Address">
+            <span></span>
+            <div class="submit">
+                <button type="button" class="btn btn-secondary" onclick="getSearchLocation()">Submit</button>
+                <button type="button" class="btn btn-primary" onclick="getLocation()">Nearby Me</button>
+                <button type="button" class="btn btn-info" id="clearButton" onclick="clearMap()">Clear Directions</button>
+                <button type="button" class="btn btn-success" id="favShowButton" onclick="favLoad()">Favourites Show</button>
+                <button type="button" class="btn btn-success" id="favHideButton" onclick="favLoad()">Favourites Hide</button>
+            </div>
+        </div>
+        </br>
+        <div class="flex-horizontal" id="flex-horizontal">
+            <div class="flex-vertical">
+                <div id='myMap' class="startMap"></div>
+                <div id='directions'></div>
+            </div>
+            <div id="datadump"></div>
+        </div>
+        <div id="favList"></div>
+    </div>
+</body>
+
+<script>
+    var map;
+    var currentLocation;
+    var directionsManager;
+    var searchManager;
+    var destinationLocation;
+    var boolean = 1;
+
+    function favLoad() {
+        if (boolean == 1) {
+            document.getElementById("flex-horizontal").style.display = "none";
+            document.getElementById("favShowButton").style.display = "none";
+            document.getElementById("favHideButton").style.display = "inline";
+            document.getElementById("favList").style.display = "block";
+            boolean = 0;
+        } else {
+            document.getElementById("flex-horizontal").style.display = "flex";
+            document.getElementById("favShowButton").style.display = "inline";
+            document.getElementById("favHideButton").style.display = "none";
+            document.getElementById("favList").style.display = "none";
+            boolean = 1;
+        }
+    }
+
+    function loadMapScenario() {
+        favButton()
+        map = new Microsoft.Maps.Map(document.getElementById('myMap'), {});
+
+        //Create info box but don't show it
+        infobox = new Microsoft.Maps.Infobox(map.getCenter(), {
+            visible: false
+        });
+
+        //Assign infobox to map instance
+        infobox.setMap(map);
+
+        //Creates an instance of search manager.
+        Microsoft.Maps.loadModule('Microsoft.Maps.Search', function() {
+            searchManager = new Microsoft.Maps.Search.SearchManager(map);
+        });
+
+        //Sets directions on map and loads text directions.
+        Microsoft.Maps.loadModule('Microsoft.Maps.Directions', function() {
+            directionsManager = new Microsoft.Maps.Directions.DirectionsManager(map);
+            directionsManager.setRequestOptions({
+                routeMode: Microsoft.Maps.Directions.RouteMode.driving
+            });
+            directionsManager.setRenderOptions({
+                itineraryContainer: document.getElementById('directions')
+            });
+        })
+    }
+
+    function deletePushPins() {
+        map.entities.push(Microsoft.Maps.TestDataGenerator.getPushpins(10, map.getBounds()));
+        for (var i = map.entities.getLength() - 1; i >= 0; i--) {
+            var pushpin = map.entities.get(i);
+            if (pushpin instanceof Microsoft.Maps.Pushpin) {
+                map.entities.removeAt(i);
+            }
+        }
+    }
+
+
+    //Calculates directions from your current location to destination.
+    function directions() {
+        var waypoint1 = new Microsoft.Maps.Directions.Waypoint({
+            address: 'Your Location',
+            location: currentLocation
+        });
+        var waypoint2 = new Microsoft.Maps.Directions.Waypoint({
+            address: 'Destination',
+            location: destinationLocation
+        });
+
+        directionsManager.clearAll();
+        directionsManager.addWaypoint(waypoint1);
+        directionsManager.addWaypoint(waypoint2);
+        directionsManager.calculateDirections();
+    }
+
+    //Clears the directoins on map.
+    function clearMap() {
+        directionsManager.clearAll();
+        document.getElementById('directions') = "";
+    }
+
+    //Function for infobox of pushed pin
+    function pushpinClicked(e) {
+        //Make sure the infobox has metadata to display.
+        if (e.target.metadata) {
+            //Set the infobox options with the metadata of the pushpin.
+            infobox.setOptions({
+                title: e.target.metadata.title,
+                location: e.target.metadata.location,
+                description: e.target.metadata.description,
+                visible: true
+            });
+            destinationLocation = e.target.metadata.location;
+        }
+    }
+
+    function cssMagic() {
+        document.getElementById("header").style.display = "none";
+        document.getElementById("header2").style.display = "block";
+        document.getElementById("blankSpace").style.display = "none";
+        document.getElementById("datadump").style.display = "block";
+        document.getElementById("myMap").className = "endMap";
+        document.getElementById("clearButton").style.display = "inline";
+        document.getElementById("favShowButton").style.display = "inline";
+    }
+
+    //Get your current Location
+    function getLocation() {
+        deletePushPins()
+        navigator.geolocation.getCurrentPosition(function(position) {
+            currentLocation = new Microsoft.Maps.Location(
+                position.coords.latitude,
+                position.coords.longitude);
+            var pin = new Microsoft.Maps.Pushpin(currentLocation, {
+                title: "Start Location",
+                color: 'red'
+            });
+            pin.metadata = {
+                title: "Start Location",
+                location: new Microsoft.Maps.Location(position.coords.latitude, position.coords.longitude),
+                description: "Your Starting Point"
+            }
+            Microsoft.Maps.Events.addHandler(pin, 'click', pushpinClicked);
+            map.entities.push(pin);
+            map.setView({
+                center: currentLocation
+            });
+            cssMagic();
+            getRestaurants();
+        });
+    }
+
+    //Set Location Manually
+    function getSearchLocation() {
+        deletePushPins()
+        var city = document.getElementById("search").value;
+        //Finds first instance of City Searched
+        var searchRequest = {
+            where: city,
+            callback: function(r) {
+                //Add the first result to the map and zoom into it.
+                if (r && r.results && r.results.length > 0) {
+                    var pin = new Microsoft.Maps.Pushpin(r.results[0].location, {
+                        title: "Start Location",
+                        color: 'red'
+                    });
+                    pin.metadata = {
+                        title: "Start Location",
+                        location: new Microsoft.Maps.Location(r.results[0].location.latitude, r.results[0].location.longitude),
+                        description: "Your Starting Point"
+                    }
+                    Microsoft.Maps.Events.addHandler(pin, 'click', pushpinClicked);
+                    map.entities.push(pin);
+                    map.setView({
+                        bounds: r.results[0].bestView
+                    });
+                    currentLocation = new Microsoft.Maps.Location(r.results[0].location.latitude, r.results[0].location.longitude);
+                    getRestaurants();
+                    cssMagic();
+                }
+            },
+            errorCallback: function(e) {
+                //If there is an error, alert the user about it.
+                alert("No results found.");
+            }
+        };
+        //Make the geocode request.
+        searchManager.geocode(searchRequest);
+    }
+
+    //Populating yelp restaurants
+    function getRestaurants() {
+        document.getElementById("datadump").innerHTML = "";
+        testData();
+        $.get({
+            url: 'https://csunix.mohawkcollege.ca/tooltime/10133/api/api.php',
+            data: {
+                lat: currentLocation.latitude,
+                long: currentLocation.longitude
+            },
+            success: function(data) {
+                var jsonData = JSON.parse(data);
+                // dumping the entire string of JSON data
+                for (var i = 0; i < jsonData.businesses.length; i++) {
+                    var categories = "";
+                    for (var j = 0; j < jsonData.businesses[i].categories.length; j++) {
+                        if (j >= 1) {
+                            categories += ", ";
+                        }
+                        categories += jsonData.businesses[i].categories[j].title;
+                    }
+                    //Displaying the data as text
+                    displayData(jsonData.businesses[i], categories, 'purple');
+                    //Making the data into pushpins
+                    addPin(jsonData.businesses[i], categories, 'purple');
+                }
+            }
+        })
+    }
+
+    //Creates pushpins from jsonData
+    function addPin(businesses, categories, color) {
+        var location = new Microsoft.Maps.Location(
+            businesses.coordinates.latitude,
+            businesses.coordinates.longitude
+        );
+        var pushpin = new Microsoft.Maps.Pushpin(
+            location, {
+                title: businesses.name,
+                color: color
+            });
+
+        pushpin.metadata = {
+            title: businesses.name,
+            location: new Microsoft.Maps.Location(businesses.coordinates.latitude, businesses.coordinates.longitude),
+            description: businesses.location.display_address[0] + "</br>" +
+                categories + "</br>" +
+                "<a href='#' onclick='return directions(" + businesses.coordinates.latitude + "," +
+                businesses.coordinates.longitude + ");" + "'>directions</a>"
+        }
+        Microsoft.Maps.Events.addHandler(pushpin, 'click', pushpinClicked);
+        map.entities.push(pushpin);
+    }
+
+    //Formats json data into displayable text
+    function displayData(businesses, categories, color) {
+        var string1 = "<div class='media' style='border: 2px solid lightblue;'>";
+        var string2 = "<div class='media' style='border: 2px solid limegreen;'>";
+        var mediaString = "";
+        var upVote = "<button class='fontButton' onclick='downVote(\"" + businesses.name + "\")'><i class='fa fa-arrow-down'></i></button>";
+        var downVote = "<button class='fontButton' onclick='upVote(\"" + businesses.name + "\")'><i class='fa fa-arrow-up'></i></button>";
+        var favButton = "<button class='fontButton' onclick='addFav(\"" + businesses.name + "\")'><i class='fa fa-heart'></i></button>";
+        var buttons = "";
+
+        color == 'green' ? mediaString += string2 : mediaString += string1;
+        color == 'green' ? buttons += downVote + " <span id='" + businesses.name + "'>" + businesses.likes + " </span>" + upVote + favButton : buttons += favButton;
+
+        document.getElementById("datadump").innerHTML += mediaString +
+            "<img class='center' src=' " + businesses.image_url + "' alt='Generic placeholder image'>" +
+            "<div class='media-body'>" +
+            "<h5 class='mt-0'>" + businesses.name + "</h5>" +
+            "<p id='category'>" + categories + "</p>" +
+            "<p>" + businesses.location.display_address[0] + "</p>" +
+            buttons +
+            "</div>" +
+            "</div>"
+    }
+
+    function testData() {
+        $.get(
+            "advertised.php", {
+                "fetchData": "fetchData"
+            },
+            function(data) {
+                var restaurants = JSON.parse(data);
+                for (var i = 0; i < restaurants.length; i++) {
+                    displayData(restaurants[i], restaurants[i].category, 'green')
+                    addPin(restaurants[i], restaurants[i].category, 'green')
+                }
+            }
+        )
+    }
+
+    function upVote(name) {
+        $.post(
+            "advertised.php", {
+                "upVote": name
+            },
+            function(data) {
+                var num1 = parseFloat(document.getElementById(name).innerHTML);
+                var num2 = num1 + 1;
+                document.getElementById(name).innerHTML = num2;
+            }
+        )
+    }
+
+
+    function downVote(name) {
+        $.post(
+            "advertised.php", {
+                "downVote": name
+            },
+            function(data) {
+                var num1 = parseFloat(document.getElementById(name).innerHTML);
+                var num2 = num1 - 1;
+                document.getElementById(name).innerHTML = num2;
+            }
+        )
+    }
+
+    function displayFav(fave) {
+        var deleteButton = "<button type='button' class='btn btn-danger' onclick='deleteFav(\"" + fave.name + "\")'>Remove Favourite</button>";
+        var addComment = "<button type='button' class='btn btn-primary' onclick='addComment(\"" + fave.name + "\")'>Add Comment</button>";
+        document.getElementById("favList").innerHTML += "<div class='media' id='" + fave.name + "-1'style='border: 2px solid lightblue;'>" +
+            "<div class='media-body'>" +
+            "<h5 class='mt-0'>" + fave.name + "</h5>" +
+            "<p id='" + fave.name + "-comment'>" + fave.comments + "</p>" +
+            deleteButton + " " + addComment + "</div>" +
+            "</div>"
+    }
+
+    function addComment(name) {
+        var txt = "";
+        var person = prompt("Please enter your comment: ");
+        updateComment(name, person);
+    }
+
+    function updateComment(name, comment) {
+        $.post(
+            "advertised.php", {
+                "updateComment": name,
+                "newComment": comment
+            },
+            function(data) {
+                document.getElementById(name + "-comment").innerHTML += " " + comment;
+            }
+        )
+    }
+
+    function favButton() {
+        document.getElementById("favList").innerHTML = "";
+        $.get(
+            "advertised.php", {
+                "fetchFave": "fetchFave"
+            },
+            function(data) {
+                var favourites = JSON.parse(data);
+                for (var i = 0; i < favourites.length; i++) {
+                    displayFav(favourites[i]);
+                }
+            }
+        )
+    }
+
+    function deleteFav(name) {
+        $.post(
+            "advertised.php", {
+                "deleteFav": name
+            },
+            function(data) {
+                document.getElementById(name + "-1").style.display = "none";
+            }
+        )
+    }
+
+    function addFav(name) {
+        $.post(
+            "advertised.php", {
+                "addFav": name
+            },
+            function(data) {
+                if (data == 0) {
+                    favButton();
+                    alert("Added to Favourites");
+                }
+                if (data > 0) {
+                    alert("Already added to Favourites");
+                }
+            }
+        )
+    }
+</script>
+
+</html>

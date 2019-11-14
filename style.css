@@ -1,0 +1,136 @@
+h1 {
+    text-align: center;
+    color: blue;
+}
+
+#header {
+    padding-bottom: 10%;
+}
+
+.flex-vertical {
+    width: 50%;
+    flex-direction: column;
+}
+
+.flex-horizontal {
+    display: flex;
+    flex-direction: row-reverse;
+}
+
+.directionsPanel {
+    width: 100%;
+}
+
+#header2 {
+    display: none;
+}
+
+.searching {
+    margin: auto;
+    width: 60%;
+    display: block;
+}
+
+.submit {
+    text-align: center;
+    padding-top: 1%;
+}
+
+.center {
+    width: 150px;
+    height: 150px;
+    border-radius: 50%;
+}
+
+p {
+    margin-bottom: 1px;
+}
+
+.media {
+    padding: 1%;
+    border-radius: 5px;
+    margin: 5px;
+}
+
+.media-body {
+    padding-left: 5%;
+}
+
+.fontButton {
+    border: none;
+    background: none;
+}
+
+.fa-arrow-down {
+    color: red;
+}
+
+.fa-arrow-up {
+    color: blue;
+}
+
+#clearButton {
+    display: none;
+}
+
+#favStuff {
+    display: none;
+}
+
+.mobile {
+    display: none;
+}
+
+.fa-heart {
+    color: pink;
+}
+
+#favList {
+    display: none;
+}
+
+.startMap {
+    width: 1px;
+    height: 1px;
+}
+
+.endMap {
+    width: 100%;
+    height: 600px;
+}
+
+#favShowButton {
+    display: none;
+}
+
+#favHideButton {
+    display: none;
+}
+
+#datadump {
+    width: 100%;
+}
+
+@media only screen and (max-width: 768px) {
+    .flex-vertical {
+        width: 100%;
+        display: block;
+    }
+    .flex-horizontal {
+        display: flex;
+        flex-direction: column;
+    }
+    .media {
+        width: 100%;
+    }
+    .endMap {
+        width: 100%;
+        height: 200px;
+    }
+    #datadump {
+        display: none;
+    }
+    .searching {
+        width: 90%;
+    }
+}

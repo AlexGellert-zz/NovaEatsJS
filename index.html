@@ -6,7 +6,7 @@
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css">
     <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css" integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
-    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?key=<Bing_API_Key>' async defer></script>
+    <script type='text/javascript' src='https://www.bing.com/api/maps/mapcontrol?key=Aqy2nRzeA1bvqvsfUopcvwDoKwrd3JcWTXnUzpyQQ7ZwfXzQG7rctFE7pApS2aDu' async defer></script>
     <script src="https://code.jquery.com/jquery-3.3.1.min.js" crossorigin="anonymous"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.14.7/umd/popper.min.js" integrity="sha384-UO2eT0CpHqdSJQ6hJty5KVphtPhzWj9WO1clHTMGa3JDZwrnQq4sF86dIHNDz0W1" crossorigin="anonymous"></script>
     <meta http-equiv='Content-Type' content='text/html; charset=utf-8' />
@@ -32,11 +32,11 @@
             <input class="form-control" id="search" type="text" placeholder="Search A City or Address">
             <span></span>
             <div class="submit">
-                <button type="button" class="btn btn-secondary" onclick="getSearchLocation()">Submit</button>
-                <button type="button" class="btn btn-primary" onclick="getLocation()">Nearby Me</button>
+                <button type="button" class="btn btn-secondary" id="searchLocation" onclick="getSearchLocation()">Submit</button>
+                <button type="button" class="btn btn-primary" id="location" onclick="getLocation()">Nearby Me</button>
                 <button type="button" class="btn btn-info" id="clearButton" onclick="clearMap()">Clear Directions</button>
-                <button type="button" class="btn btn-success" id="favShowButton" onclick="favLoad()">Favourites Show</button>
-                <button type="button" class="btn btn-success" id="favHideButton" onclick="favLoad()">Favourites Hide</button>
+                <button type="button" class="btn btn-success" id="favShowButton" onclick="favLoad()">Favourites List</button>
+                <button type="button" class="btn btn-success" id="favHideButton" onclick="favLoad()">Show Map</button>
             </div>
         </div>
         </br>
@@ -63,12 +63,18 @@
         if (boolean == 1) {
             document.getElementById("flex-horizontal").style.display = "none";
             document.getElementById("favShowButton").style.display = "none";
+            document.getElementById("clearButton").style.display = "none";
+            document.getElementById("location").style.display = "none";
+            document.getElementById("searchLocation").style.display = "none";
             document.getElementById("favHideButton").style.display = "inline";
             document.getElementById("favList").style.display = "block";
             boolean = 0;
         } else {
             document.getElementById("flex-horizontal").style.display = "flex";
+            document.getElementById("clearButton").style.display = "inline";
+            document.getElementById("location").style.display = "inline";
             document.getElementById("favShowButton").style.display = "inline";
+            document.getElementById("searchLocation").style.display = "inline";
             document.getElementById("favHideButton").style.display = "none";
             document.getElementById("favList").style.display = "none";
             boolean = 1;
@@ -116,14 +122,19 @@
 
 
     //Calculates directions from your current location to destination.
-    function directions() {
+    function directions(lat, long) {
+
+        var tempLocation = new Microsoft.Maps.Location(
+            lat,
+            long);
+
         var waypoint1 = new Microsoft.Maps.Directions.Waypoint({
             address: 'Your Location',
             location: currentLocation
         });
         var waypoint2 = new Microsoft.Maps.Directions.Waypoint({
             address: 'Destination',
-            location: destinationLocation
+            location: tempLocation
         });
 
         directionsManager.clearAll();
@@ -230,7 +241,7 @@
     //Populating yelp restaurants
     function getRestaurants() {
         document.getElementById("datadump").innerHTML = "";
-        testData();
+        // testData();
         $.get({
             url: 'https://csunix.mohawkcollege.ca/tooltime/10133/api/api.php',
             data: {
@@ -274,6 +285,7 @@
             location: new Microsoft.Maps.Location(businesses.coordinates.latitude, businesses.coordinates.longitude),
             description: businesses.location.display_address[0] + "</br>" +
                 categories + "</br>" +
+                "<button class='fontButton' onclick='addFav(\"" + businesses.name + "\",\"" + businesses.image_url + "\")'><i class='fa fa-heart'> </i></button>" +
                 "<a href='#' onclick='return directions(" + businesses.coordinates.latitude + "," +
                 businesses.coordinates.longitude + ");" + "'>directions</a>"
         }
@@ -283,16 +295,12 @@
 
     //Formats json data into displayable text
     function displayData(businesses, categories, color) {
-        var string1 = "<div class='media' style='border: 2px solid lightblue;'>";
+        var string1 = "<div class='media' style='border: 2px solid cornflowerblue;'>";
         var string2 = "<div class='media' style='border: 2px solid limegreen;'>";
         var mediaString = "";
-        var upVote = "<button class='fontButton' onclick='downVote(\"" + businesses.name + "\")'><i class='fa fa-arrow-down'></i></button>";
-        var downVote = "<button class='fontButton' onclick='upVote(\"" + businesses.name + "\")'><i class='fa fa-arrow-up'></i></button>";
-        var favButton = "<button class='fontButton' onclick='addFav(\"" + businesses.name + "\")'><i class='fa fa-heart'></i></button>";
-        var buttons = "";
+        var favButton = "<button class='fontButton' onclick='addFav(\"" + businesses.name + "\",\"" + businesses.image_url + "\")'><i class='fa fa-heart'> Favourite</i></button>";
 
         color == 'green' ? mediaString += string2 : mediaString += string1;
-        color == 'green' ? buttons += downVote + " <span id='" + businesses.name + "'>" + businesses.likes + " </span>" + upVote + favButton : buttons += favButton;
 
         document.getElementById("datadump").innerHTML += mediaString +
             "<img class='center' src=' " + businesses.image_url + "' alt='Generic placeholder image'>" +
@@ -300,61 +308,71 @@
             "<h5 class='mt-0'>" + businesses.name + "</h5>" +
             "<p id='category'>" + categories + "</p>" +
             "<p>" + businesses.location.display_address[0] + "</p>" +
-            buttons +
+            favButton +
+            "<a href='#' style='padding-left: 4%;' onclick='return directions(" + businesses.coordinates.latitude + "," +
+            businesses.coordinates.longitude + ");" + "'>directions</a>" +
             "</div>" +
             "</div>"
     }
 
-    function testData() {
-        $.get(
-            "advertised.php", {
-                "fetchData": "fetchData"
-            },
-            function(data) {
-                var restaurants = JSON.parse(data);
-                for (var i = 0; i < restaurants.length; i++) {
-                    displayData(restaurants[i], restaurants[i].category, 'green')
-                    addPin(restaurants[i], restaurants[i].category, 'green')
-                }
-            }
-        )
-    }
+    // Can be used to load in advertised restaurants
+    // function testData() {
+    //     $.get(
+    //         "advertised.php", {
+    //             "fetchData": "fetchData"
+    //         },
+    //         function(data) {
+    //             var restaurants = JSON.parse(data);
+    //             for (var i = 0; i < restaurants.length; i++) {
+    //                 displayData(restaurants[i], restaurants[i].category, 'green')
+    //                 addPin(restaurants[i], restaurants[i].category, 'green')
+    //             }
+    //         }
+    //     )
+    // }
 
-    function upVote(name) {
+    function upVote(id) {
         $.post(
             "advertised.php", {
-                "upVote": name
+                "upVote": id
             },
             function(data) {
-                var num1 = parseFloat(document.getElementById(name).innerHTML);
+                var num1 = parseFloat(document.getElementById(id).innerHTML);
                 var num2 = num1 + 1;
-                document.getElementById(name).innerHTML = num2;
+                document.getElementById(id).innerHTML = num2;
             }
         )
     }
 
 
-    function downVote(name) {
+    function downVote(id) {
         $.post(
             "advertised.php", {
-                "downVote": name
+                "downVote": id
             },
             function(data) {
-                var num1 = parseFloat(document.getElementById(name).innerHTML);
+                var num1 = parseFloat(document.getElementById(id).innerHTML);
                 var num2 = num1 - 1;
-                document.getElementById(name).innerHTML = num2;
+                document.getElementById(id).innerHTML = num2;
             }
         )
     }
 
     function displayFav(fave) {
-        var deleteButton = "<button type='button' class='btn btn-danger' onclick='deleteFav(\"" + fave.name + "\")'>Remove Favourite</button>";
-        var addComment = "<button type='button' class='btn btn-primary' onclick='addComment(\"" + fave.name + "\")'>Add Comment</button>";
-        document.getElementById("favList").innerHTML += "<div class='media' id='" + fave.name + "-1'style='border: 2px solid lightblue;'>" +
+        var deleteButton = "<button type='button' class='btn btn-danger' onclick='deleteFav(\"" + fave.id + "\")'>Remove Favourite</button>";
+        var addComment = "<button type='button' class='btn btn-primary' onclick='addComment(\"" + fave.id + "\")'>Add Comment</button>";
+        var upVote = "<button class='fontButton' onclick='downVote(\"" + fave.id + "\")'><i class='fa fa-arrow-down'></i></button>";
+        var downVote = "<button class='fontButton' onclick='upVote(\"" + fave.id + "\")'><i class='fa fa-arrow-up'></i></button>";
+        var buttons = downVote + " <span id='" + fave.id + "'>" + fave.likes + " </span>" + upVote;
+
+        document.getElementById("favList").innerHTML += "<div class='media' id='" + fave.id + "-1'style='border: 2px solid lightblue;'>" +
+            "<img class='center' src=' " + fave.image_url + "' alt='Generic placeholder image'>" +
             "<div class='media-body'>" +
             "<h5 class='mt-0'>" + fave.name + "</h5>" +
-            "<p id='" + fave.name + "-comment'>" + fave.comments + "</p>" +
+            "<p><b>Comments:</b></p>" +
+            "<p id='" + fave.id + "-comment'>" + fave.comments + "</p>" +
             deleteButton + " " + addComment + "</div>" +
+            buttons +
             "</div>"
     }
 
@@ -365,15 +383,17 @@
     }
 
     function updateComment(name, comment) {
-        $.post(
-            "advertised.php", {
-                "updateComment": name,
-                "newComment": comment
-            },
-            function(data) {
-                document.getElementById(name + "-comment").innerHTML += " " + comment;
-            }
-        )
+        if (comment != null) {
+            $.post(
+                "advertised.php", {
+                    "updateComment": name,
+                    "newComment": comment
+                },
+                function(data) {
+                    document.getElementById(name + "-comment").innerHTML += "<p> " + comment + "</p>";
+                }
+            )
+        }
     }
 
     function favButton() {
@@ -391,21 +411,22 @@
         )
     }
 
-    function deleteFav(name) {
+    function deleteFav(id) {
         $.post(
             "advertised.php", {
-                "deleteFav": name
+                "deleteFav": id
             },
             function(data) {
-                document.getElementById(name + "-1").style.display = "none";
+                document.getElementById(id + "-1").style.display = "none";
             }
         )
     }
 
-    function addFav(name) {
+    function addFav(name, image) {
         $.post(
             "advertised.php", {
-                "addFav": name
+                "addFav": name,
+                "image": image
             },
             function(data) {
                 if (data == 0) {

@@ -2,9 +2,9 @@
 Javascript &amp; PHP version of Nova Eats
 
 # How to Use
-Add your bing API key to index.html
-Import SQL files to your database of choice
-Setup your login credentials in advertised.php
+Add your bing API key to index.html /n
+Import SQL files to your database of choice /n
+Setup your login credentials in advertised.php /n
 
 # Functions
 ```

@@ -35,7 +35,7 @@ $db = mysqli_connect('localhost', 'root', '', 'projects');
         mysqli_query($db, "UPDATE favourites SET likes = likes - 1 WHERE `id` = '$id'");
     }
 
-    if(isset($_GET['fetchFave'])){
+    if(isset($_POST['fetchFave'])){
         $favourites = mysqli_query($db, "SELECT * FROM favourites");
         $favouritesSerialized = array();
         foreach($favourites as $favourite){

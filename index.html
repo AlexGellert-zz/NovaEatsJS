@@ -25,6 +25,10 @@
             </div>
             <h1>Nova Eats</h1>
         </div>
+        <div style="display:none;" id="loading">
+            <p id="find"><b>Finding restaurants near you...</b></p>
+            <div id="loader"></div>
+        </div>
         <div id="header2">
             <h1>Nova Eats</h1>
         </div>
@@ -32,8 +36,8 @@
             <input class="form-control" id="search" type="text" placeholder="Search A City or Address">
             <span></span>
             <div class="submit">
-                <button type="button" class="btn btn-secondary" id="searchLocation" onclick="getSearchLocation()">Submit</button>
-                <button type="button" class="btn btn-primary" id="location" onclick="getLocation()">Nearby Me</button>
+                <button type="button" class="btn btn-secondary" id="searchLocation" onclick="submitButton()">Submit</button>
+                <button type="button" class="btn btn-primary" id="location" onclick="nearBy()">Nearby Me</button>
                 <button type="button" class="btn btn-info" id="clearButton" onclick="clearMap()">Clear Directions</button>
                 <button type="button" class="btn btn-success" id="favShowButton" onclick="favLoad()">Favourites List</button>
                 <button type="button" class="btn btn-success" id="favHideButton" onclick="favLoad()">Show Map</button>
@@ -110,6 +114,24 @@
         })
     }
 
+    function nearBy() {
+        document.getElementById("header").style.display = "none";
+        document.getElementById("search").style.display = "none";
+        document.getElementById("searchLocation").style.display = "none";
+        document.getElementById("location").style.display = "none";
+        document.getElementById("loading").style.display = "block";
+        getLocation();
+    }
+
+    function submitButton() {
+        document.getElementById("header").style.display = "none";
+        document.getElementById("search").style.display = "none";
+        document.getElementById("searchLocation").style.display = "none";
+        document.getElementById("location").style.display = "none";
+        document.getElementById("loading").style.display = "block";
+        getSearchLocation();
+    }
+
     function deletePushPins() {
         map.entities.push(Microsoft.Maps.TestDataGenerator.getPushpins(10, map.getBounds()));
         for (var i = map.entities.getLength() - 1; i >= 0; i--) {
@@ -165,13 +187,16 @@
     }
 
     function cssMagic() {
-        document.getElementById("header").style.display = "none";
+        document.getElementById("loading").style.display = "none";
         document.getElementById("header2").style.display = "block";
         document.getElementById("blankSpace").style.display = "none";
         document.getElementById("datadump").style.display = "block";
         document.getElementById("myMap").className = "endMap";
         document.getElementById("clearButton").style.display = "inline";
         document.getElementById("favShowButton").style.display = "inline";
+        document.getElementById("search").style.display = "block";
+        document.getElementById("searchLocation").style.display = "inline";
+        document.getElementById("location").style.display = "inline";
     }
 
     //Get your current Location
@@ -195,7 +220,6 @@
             map.setView({
                 center: currentLocation
             });
-            cssMagic();
             getRestaurants();
         });
     }
@@ -226,7 +250,6 @@
                     });
                     currentLocation = new Microsoft.Maps.Location(r.results[0].location.latitude, r.results[0].location.longitude);
                     getRestaurants();
-                    cssMagic();
                 }
             },
             errorCallback: function(e) {
@@ -264,6 +287,7 @@
                     //Making the data into pushpins
                     addPin(jsonData.businesses[i], categories, 'purple');
                 }
+                cssMagic();
             }
         })
     }
@@ -398,7 +422,7 @@
 
     function favButton() {
         document.getElementById("favList").innerHTML = "";
-        $.get(
+        $.post(
             "advertised.php", {
                 "fetchFave": "fetchFave"
             },

@@ -38,9 +38,23 @@ h1 {
     }
 }
 
+.goBack {
+    margin-top: 1%;
+    padding-left: 1%;
+}
+
+.goBack a {
+    margin-top: 1%;
+    color: white;
+}
+
+.goBack a:hover {
+    color: white;
+}
+
 #find {
     text-align: center;
-    padding-top: 20%;
+    padding-top: 15%;
 }
 
 html {

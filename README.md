@@ -1,5 +1,5 @@
 # NovaEatsJS
-Javascript &amp; PHP version of Nova Eats
+Javascript &amp; PHP version of Nova Eats hosted on https://www.alexgellert.com/nova2.html
 
 # How to Use
 Add your bing API key to index.html  
